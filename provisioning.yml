@@ -1,26 +1,40 @@
 ---
 - hosts: all
   tasks:
-    - name: "Instala pacotes via amazon linux extras"
+    - name: Instala pacotes via amazon linux extras
       shell: "amazon-linux-extras install -y {{ item }}"
       become: yes
       with_items:
        - lamp-mariadb10.2-php7.2
-       - php 7.2
+       - php7.2
+       - python3.8
 
-
-    - name: "Instala pacotes de dependência"
+    - name: Instala pacotes de dependencia
       yum:
          name: "{{ item }}"
          state: latest
       become: yes 
-      with_item: 
+      with_items: 
         - httpd 
         - mariadb-server     
+        - MySQL-python
+        - php-gd
+        - php-mcrypt
 
-
-    - name: "Instala Banco MySql"
+    - name: Inicia servico DB 
+      shell: "systemctl start mariadb"
+      become: yes
+        
+    - name: Cria Banco MySql
       mysql_db: 
-        name: wordpress-db
+        name: wordpress_db
         login_user: root
-        state: presente
+        state: present
+
+    - name: 'Cria o usuário do MySQL'
+      mysql_user:
+        login_user: root
+        name: wordpress_user
+        password: 12345
+        priv: 'wordpress_db.*:ALL'
+        state: present
