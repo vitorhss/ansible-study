@@ -1,0 +1,26 @@
+---
+- hosts: all
+  tasks:
+    - name: "Instala pacotes via amazon linux extras"
+      shell: "amazon-linux-extras install -y {{ item }}"
+      become: yes
+      with_items:
+       - lamp-mariadb10.2-php7.2
+       - php 7.2
+
+
+    - name: "Instala pacotes de dependência"
+      yum:
+         name: "{{ item }}"
+         state: latest
+      become: yes 
+      with_item: 
+        - httpd 
+        - mariadb-server     
+
+
+    - name: "Instala Banco MySql"
+      mysql_db: 
+        name: wordpress-db
+        login_user: root
+        state: presente
