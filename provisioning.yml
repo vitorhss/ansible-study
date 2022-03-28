@@ -1,5 +1,10 @@
 ---
 - hosts: all
+  handlers:
+    - name: restart httpd
+      shell: "systemctl restart httpd"
+      become: yes   
+
   tasks:
     - name: Instala pacotes via amazon linux extras
       shell: "amazon-linux-extras install -y {{ item }}"
@@ -38,3 +43,44 @@
         password: 12345
         priv: 'wordpress_db.*:ALL'
         state: present
+
+    - name: Download wordpress 
+      get_url:
+        url: "https://wordpress.org/latest.tar.gz"
+        dest: "/tmp/wordpress.tar.gz"
+
+    - name: 'Descompactando o pacote wordpress'
+      unarchive: 
+        src: "/tmp/wordpress.tar.gz" 
+        dest: "/var/www/"
+        remote_src: yes 
+      become: yes
+
+    - name: Copiando arquivo de config 
+      copy: 
+        src: "/var/www/wordpress/wp-config-sample.php"     
+        dest: "/var/www/wordpress/wp-config.php" 
+        remote_src: yes      
+      become: yes 
+
+    - name: Configura database no arquivo wp-config 
+      replace: 
+        path: "/var/www/wordpress/wp-config.php" 
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.value }}"
+      with_items:
+        - {regex: 'database_name_here', value: 'wordpress_db'}  
+        - {regex: 'username_here', value: 'wordpress_user'}  
+        - {regex: 'password_here', value: '12345'}  
+      become: yes  
+    
+    - name: copy file config httpd 
+      copy: 
+        src: httpd.conf
+        dest: '/etc/httpd/conf/httpd.conf'
+        force: yes
+      become: yes  
+      notify: 
+       - restart httpd
+
+        
