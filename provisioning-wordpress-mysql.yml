@@ -1,0 +1,130 @@
+---
+- hosts: db
+  
+  handlers:
+    - name: restart MariaDB
+      shell: "systemctl restart mariadb"
+      become: yes 
+    
+  tasks:
+
+    - name: Instala pacotes via amazon linux extras
+      shell: "amazon-linux-extras install -y {{ item }}" 
+      become: yes
+      with_items:
+       - lamp-mariadb10.2-php7.2
+       - python3.8
+
+    - name: Instala depedencias DB
+      yum:
+        name: "{{ item }}"
+        state: present
+      become: yes   
+      with_items:  
+        - mariadb-server     
+        - MySQL-python
+
+    - name: Inicia servico DB 
+      shell: "systemctl start mariadb"
+      become: yes
+        
+    - name: Cria Banco MySql
+      mysql_db: 
+        name: wordpress_db
+        login_user: root
+        state: present
+      
+    - name: 'Cria o usuário do MySQL'
+      mysql_user:
+        login_user: root
+        name: wordpress_user
+        password: 12345
+        priv: 'wordpress_db.*:ALL'
+        state: present
+        host: "{{ item }}"
+      with_items:
+        - 'localhost'
+        - '127.0.0.1'
+        - '172.31.83.112'
+
+    - name: Liberando conexao remota
+      copy: 
+        src: 'my.cnf'
+        dest: '/etc/my.cnf'
+        force: yes 
+      become: yes  
+      notify:
+        restart MariaDB
+
+  
+- hosts: wordpress
+  handlers:
+    - name: restart httpd
+      shell: "systemctl restart httpd"
+      become: yes
+    
+  tasks: 
+    - name: Instala pacotes via amazon linux extras
+      shell: "amazon-linux-extras install -y {{ item }}"
+      become: yes
+      with_items:
+        - php7.2
+        - python3.8
+        
+    - name: Instala pacotes de dependencia
+      yum:
+        name: "{{ item }}"
+        state: latest
+      become: yes 
+      with_items: 
+        - httpd 
+        - php-gd
+        - php-mcrypt
+
+    - name: Download wordpress 
+      get_url:
+        url: "https://wordpress.org/latest.tar.gz"
+        dest: "/tmp/wordpress.tar.gz"
+
+    - name: 'Descompactando o pacote wordpress'
+      unarchive: 
+        src: "/tmp/wordpress.tar.gz" 
+        dest: "/var/www/"
+        remote_src: yes 
+      become: yes
+
+    - name: Copiando arquivo de config 
+      copy: 
+        src: "/var/www/wordpress/wp-config-sample.php"     
+        dest: "/var/www/wordpress/wp-config.php" 
+        remote_src: yes      
+      become: yes 
+
+    - name: Configura database no arquivo wp-config 
+      replace: 
+        path: "/var/www/wordpress/wp-config.php" 
+        regexp: "{{ item.regex }}"
+        replace: "{{ item.value }}"
+      with_items:
+        - {regex: 'database_name_here', value: 'wordpress_db'}  
+        - {regex: 'username_here', value: 'wordpress_user'}  
+        - {regex: 'password_here', value: '12345'}  
+        - {regex: 'localhost', value: '172.31.91.216'}
+      become: yes  
+
+    - name: Movendo diretorio wordpress
+      copy:
+        src: /var/www/wordpress/
+        dest: /var/www/html/
+        remote_src: yes      
+      become: yes  
+        
+    - name: copy file config httpd 
+      copy: 
+        src: httpd.conf
+        dest: '/etc/httpd/conf/httpd.conf'
+        force: yes
+      become: yes 
+      notify: 
+        - restart httpd
+        
