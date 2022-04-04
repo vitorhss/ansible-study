@@ -1,2 +1,6 @@
 [wordpress]
-34.227.151.197 ansible_connection=ssh ansible_ssh_user=ec2-user
+54.211.31.66 ansible_connection=ssh ansible_ssh_user=ec2-user
+
+[db]
+54.166.123.81 ansible_connection=ssh ansible_ssh_user=ec2-user
+
