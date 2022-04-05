@@ -38,14 +38,14 @@
       mysql_user:
         login_user: root
         name: wordpress_user
-        password: 12345
+        password: "{{dbpassword}}"
         priv: 'wordpress_db.*:ALL'
         state: present
         host: "{{ item }}"
       with_items:
         - 'localhost'
         - '127.0.0.1'
-        - '172.31.83.112'
+        - '{{apphost}}'
 
     - name: Liberando conexao remota
       copy: 
@@ -108,8 +108,8 @@
       with_items:
         - {regex: 'database_name_here', value: 'wordpress_db'}  
         - {regex: 'username_here', value: 'wordpress_user'}  
-        - {regex: 'password_here', value: '12345'}  
-        - {regex: 'localhost', value: '172.31.91.216'}
+        - {regex: 'password_here', value: '{{dbpassword}}'}  
+        - {regex: 'localhost', value: '{{dbhost}}'}
       become: yes  
 
     - name: Movendo diretorio wordpress
