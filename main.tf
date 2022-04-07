@@ -14,6 +14,12 @@ provider "aws" {
     region = "us-east-1"
 }
 
+variable "ingress_ip" {
+  type     = string
+  nullable = false 
+}
+
+
 resource "aws_security_group" "sg_ssh" {
   name        = "sg_ssh"
   description = "Allow SSH access"
@@ -23,7 +29,7 @@ resource "aws_security_group" "sg_ssh" {
     from_port        = 22
     to_port          = 22
     protocol         = "tcp"
-    cidr_blocks      = ["201.68.58.93/32"]
+    cidr_blocks      = [var.ingress_ip]
   }
 
   egress {
@@ -48,7 +54,7 @@ resource "aws_security_group" "sg_app" {
     from_port        = 80
     to_port          = 80
     protocol         = "tcp"
-    cidr_blocks      = ["201.68.58.93/32"]
+    cidr_blocks      = [var.ingress_ip]
   }
 
   egress {
