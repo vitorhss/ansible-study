@@ -1,0 +1,7 @@
+---
+wordpress_db_name: wordpress_db
+db_username: wordpress_user
+wordpress_host: 172.31.89.128
+db_password: '@5564'
+db_host: 172.31.85.93
+wordpress_path_install: '/var/www/wordpress'

@@ -1,0 +1,5 @@
+---
+wordpress_db_name: 'wordpress_db'
+db_password: '@5564'
+db_username: wordpress_user
+db_host: 172.31.80.176
