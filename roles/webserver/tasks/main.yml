@@ -1,0 +1,9 @@
+---
+- name: copy file config httpd 
+  copy: 
+    src: files/httpd.conf
+    dest: '/etc/httpd/conf/httpd.conf'
+    force: yes
+  become: yes 
+  notify: 
+    - restart httpd
